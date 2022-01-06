@@ -122,6 +122,9 @@ else ()
     )
 endif ()
 
+#默认开启调试功能
+target_compile_definitions (puerts PRIVATE WITH_INSPECTOR)
+
 if ( WIN32 AND NOT CYGWIN )
     target_compile_definitions (puerts PRIVATE BUILDING_V8_SHARED)
 endif ()
