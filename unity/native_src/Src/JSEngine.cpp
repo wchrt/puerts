@@ -812,7 +812,8 @@ namespace puerts
         v8::Local<v8::Context> Context = ResultInfo.Context.Get(Isolate);
         v8::Context::Scope ContextScope(Context);
 
-        uv_run(NodeUVLoop, UV_RUN_NOWAIT);
+        //uv_run(NodeUVLoop, UV_RUN_NOWAIT);
+        while(uv_run(NodeUVLoop, UV_RUN_NOWAIT)){}
         static_cast<node::MultiIsolatePlatform*>(GPlatform.get())->DrainTasks(Isolate);
 #endif
     }
