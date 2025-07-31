@@ -1,6 +1,6 @@
 /*
 * Tencent is pleased to support the open source community by making Puerts available.
-* Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+* Copyright (C) 2020 Tencent.  All rights reserved.
 * Puerts is licensed under the BSD 3-Clause License, except for the third-party components listed in the file 'LICENSE' which may be subject to their corresponding license terms.
 * This file is subject to the terms and conditions defined in file 'LICENSE', which is part of this source code package.
 */
@@ -39,6 +39,9 @@ declare module "puerts" {
     
     //function requestJitModuleMethod(moduleName: string, methodName: string, callback: (err: Error, result: any)=> void, ... args: any[]): void;
     
+    /**
+     * @deprecated please use mixin instead! 
+    */
     function makeUClass(ctor: { new(): Object }): Class;
     
     function blueprint<T extends {
@@ -55,6 +58,7 @@ declare module "puerts" {
         function unmixin<T extends typeof Object>(to:T): void
         function load(cls: any): void
         function unload(cls: any): void
+        function namespace(name: string):void;
     }
     
     function on(eventType: string, listener: Function, prepend?: boolean) : void;
@@ -68,6 +72,10 @@ declare module "puerts" {
     function releaseManualReleaseDelegate<T extends (...args: any) => any>(func: T): void;
     
     function toDelegate<T extends Object, K extends keyof T>(obj: T, key: T[K] extends (...args: any) => any ? K : never) : $Delegate<T[K] extends (...args: any) => any ? T[K] : never>;
+    
+    function toDelegate<T extends (...args: any) => any>(owner: Object, callback: T): $Delegate<T>;
+
+    function load<T>(dllpath: string): T;
 
     /*function getProperties(obj: Object, ...propNames:string[]): any;
     function getPropertiesAsync(obj: Object, ...propNames:string[]): Promise<any>;
@@ -82,4 +90,6 @@ declare module "puerts" {
     } & T
 
     function $async<T>(x: T) : AsyncObject<T>;*/
+
+    function setJsTakeRef(object : Object) : void;
 }

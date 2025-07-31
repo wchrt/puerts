@@ -1,6 +1,6 @@
 /*
  * Tencent is pleased to support the open source community by making Puerts available.
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 Tencent.  All rights reserved.
  * Puerts is licensed under the BSD 3-Clause License, except for the third-party components listed in the file 'LICENSE' which may
  * be subject to their corresponding license terms. This file is subject to the terms and conditions defined in file 'LICENSE',
  * which is part of this source code package.
@@ -56,12 +56,15 @@ struct DECLARATIONGENERATOR_API FTypeScriptDeclarationGenerator
 
     std::map<UObject*, FString> NamespaceMap;
 
+    std::map<UObject*, bool> PathIsValidMap;
+
     struct BlueprintTypeDeclInfo
     {
-        FString TypeDecl;
+        TMap<FName, FString> NameToDecl;
         FString FileVersionString;
         bool IsExist;
         bool Changed;
+        bool IsAssociation;
     };
 
     TMap<FName, BlueprintTypeDeclInfo> BlueprintTypeDeclInfoCache;
@@ -69,6 +72,8 @@ struct DECLARATIONGENERATOR_API FTypeScriptDeclarationGenerator
     TArray<FAssetData> AssetList;
 
     bool RefFromOuter = false;
+
+    bool BeginGenAssetData = false;
 
     const FString& GetNamespace(UObject* Obj);
 
@@ -80,17 +85,17 @@ struct DECLARATIONGENERATOR_API FTypeScriptDeclarationGenerator
 
     void WriteOutput(UObject* Obj, const FStringBuffer& Buff);
 
-    void RestoreBlueprintTypeDeclInfos();
+    void RestoreBlueprintTypeDeclInfos(bool InGenFull);
 
-    void RestoreBlueprintTypeDeclInfos(const FString& FileContent);
+    void RestoreBlueprintTypeDeclInfos(const FString& FileContent, bool InGenFull);
 
-    void LoadAllWidgetBlueprint(FName SearchPath);
+    void LoadAllWidgetBlueprint(FName InSearchPath, bool InGenFull);
 
     void InitExtensionMethodsMap();
 
     virtual void Begin(FString Namespace = TEXT("ue"));
 
-    void GenTypeScriptDeclaration(bool GenStruct = false, bool GenEnum = false);
+    void GenTypeScriptDeclaration(bool InGenStruct, bool InGenEnum);
 
     virtual void Gen(UObject* ToGen);
 

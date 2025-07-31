@@ -32,8 +32,6 @@
 
 * 在该模块的“.Build.cs”文件中加入对JsEnv模块的依赖
 
-* 该模块的“.Build.cs”文件中，将bEnableUndefinedIdentifierWarnings设置为false
-
 ## helloworld
 
 以一个最简单的普通c++ class为例
@@ -85,7 +83,7 @@ console.log(Calc.Add(12, 34));
 
 * 使用到的C++类用UsingCppType前置声明
 
-* 注册类的成员信息，基本模式是：puerts::DefineClass<YouClass>().Function/Method/Property().Register();
+* 注册类的成员信息，基本模式是：`puerts::DefineClass<YouClass>().Function/Method/Property().Register();`
 
 * 静态AutoRegisterForCPP类型变量，只是为了利用C++的机制完成自动注册，实际上注册语句可放在脚本调用前执行的任意合法C++代码中。
 
@@ -110,6 +108,23 @@ CombineOverloads(
 
 * 函数没有重载，但希望校验参数：MakeCheckFunction(&Calc::Add)
 
+## 静态变量
+
+~~~c++
+class TestClass
+{
+public:
+    static int StaticInt;
+};
+~~~
+
+声明：
+~~~c++
+puerts::DefineClass<TestClass>()
+    .Variable("StaticInt", MakeVariable(&TestClass::StaticInt))
+    .Register();
+~~~
+
 ## 成员变量
 
 ~~~c++
@@ -126,6 +141,37 @@ public:
 puerts::DefineClass<TestClass>()
     .Property("X", MakeProperty(&TestClass::X))
     .Property("Y", MakeProperty(&TestClass::Y))
+    .Register();
+~~~
+
+## Getter、Setter
+
+~~~c++
+class TestClass
+{
+private:
+    int32_t _x;
+    
+    static int _si;
+
+public:
+    int32_t GetX()
+	{
+		return _x;
+	}
+    
+    static int32_t GetStaticInt()
+	{
+		return _si;
+	}
+};
+~~~
+
+声明：
+~~~c++
+puerts::DefineClass<TestClass>()
+    .Property("X", MakePropertyByGetterSetter(&TestClass::GetX, nullptr))
+    .Variable("StaticInt", MakeVariableByGetterSetter(&TestClass::GetStaticInt, nullptr))
     .Register();
 ~~~
 
@@ -369,13 +415,13 @@ obj.StdFunctionTest((x:number, y:number) => {
 
 ### TArray
 
-* 声明：UsingContainer(TArray<FVector>)
-* 注册：RegisterTArray(FVector);
+* 声明：`UsingContainer(TArray<FVector>);`
+* 注册：`RegisterTArray(FVector);`
 
 ### TSharedPtr
 
-* 声明：UsingTSharedPtr(FVector);
-* 注册：RegisterTSharedPtr(FVector);
+* 声明：`UsingTSharedPtr(FVector);`
+* 注册：`RegisterTSharedPtr(FVector);`
 
 ## UE类补充声明
 

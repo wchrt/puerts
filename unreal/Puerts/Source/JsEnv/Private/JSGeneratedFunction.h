@@ -1,6 +1,6 @@
 /*
  * Tencent is pleased to support the open source community by making Puerts available.
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 Tencent.  All rights reserved.
  * Puerts is licensed under the BSD 3-Clause License, except for the third-party components listed in the file 'LICENSE' which may
  * be subject to their corresponding license terms. This file is subject to the terms and conditions defined in file 'LICENSE',
  * which is part of this source code package.
@@ -10,10 +10,14 @@
 
 #include <memory>
 
+#include "NamespaceDef.h"
+
+PRAGMA_DISABLE_UNDEFINED_IDENTIFIER_WARNINGS
 #pragma warning(push, 0)
 #include "libplatform/libplatform.h"
 #include "v8.h"
 #pragma warning(pop)
+PRAGMA_ENABLE_UNDEFINED_IDENTIFIER_WARNINGS
 
 #include "DynamicInvoker.h"
 #include "FunctionTranslator.h"
@@ -37,9 +41,9 @@ public:
 
     v8::UniquePersistent<v8::Function> JsFunction;
 
-    TWeakPtr<puerts::IDynamicInvoker, ESPMode::ThreadSafe> DynamicInvoker;
+    TWeakPtr<PUERTS_NAMESPACE::IDynamicInvoker, ESPMode::ThreadSafe> DynamicInvoker;
 
-    std::unique_ptr<puerts::FFunctionTranslator> FunctionTranslator;
+    std::unique_ptr<PUERTS_NAMESPACE::FFunctionTranslator> FunctionTranslator;
 
     bool TakeJsObjectRef;
 

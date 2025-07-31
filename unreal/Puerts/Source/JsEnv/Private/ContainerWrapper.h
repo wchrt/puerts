@@ -1,6 +1,6 @@
 /*
  * Tencent is pleased to support the open source community by making Puerts available.
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 Tencent.  All rights reserved.
  * Puerts is licensed under the BSD 3-Clause License, except for the third-party components listed in the file 'LICENSE' which may
  * be subject to their corresponding license terms. This file is subject to the terms and conditions defined in file 'LICENSE',
  * which is part of this source code package.
@@ -17,12 +17,16 @@
 #include "ObjectMapper.h"
 #include "JSLogger.h"
 
+#include "NamespaceDef.h"
+
+PRAGMA_DISABLE_UNDEFINED_IDENTIFIER_WARNINGS
 #pragma warning(push, 0)
 #include "libplatform/libplatform.h"
 #include "v8.h"
 #pragma warning(pop)
+PRAGMA_ENABLE_UNDEFINED_IDENTIFIER_WARNINGS
 
-namespace puerts
+namespace PUERTS_NAMESPACE
 {
 class FPropertyTranslator;
 FORCEINLINE int32 GetSizeWithAlignment(PropertyMacro* InProperty)
@@ -78,7 +82,11 @@ struct FScriptArrayEx
     FORCEINLINE static void Empty(FScriptArray* ScriptArray, PropertyMacro* Property)
     {
         Destruct(ScriptArray, Property, 0, ScriptArray->Num());
+#if ENGINE_MAJOR_VERSION > 4
+        ScriptArray->Empty(0, GetSizeWithAlignment(Property), __STDCPP_DEFAULT_NEW_ALIGNMENT__);
+#else
         ScriptArray->Empty(0, GetSizeWithAlignment(Property));
+#endif
     }
 };
 
@@ -249,28 +257,7 @@ public:
     static void New(const v8::FunctionCallbackInfo<v8::Value>& Info)
     {
         v8::Isolate* Isolate = Info.GetIsolate();
-        v8::HandleScope HandleScope(Isolate);
-        v8::Local<v8::Context> Context = Isolate->GetCurrentContext();
-
-        auto Self = Info.This();
-
-        if (Info.Length() == 2 && Info[0]->IsExternal())    // Call by Native
-        {
-            T* Ptr = reinterpret_cast<T*>(v8::Local<v8::External>::Cast(Info[0])->Value());
-            bool PassByPointer = Info[1]->BooleanValue(Isolate);
-            if (PassByPointer)
-            {
-                FV8Utils::IsolateData<IObjectMapper>(Isolate)->BindContainer(Ptr, Self, OnGarbageCollected);
-            }
-            else
-            {
-                FV8Utils::IsolateData<IObjectMapper>(Isolate)->BindContainer(Ptr, Self, OnGarbageCollectedWithFree);
-            }
-        }
-        else    // Call by js new
-        {
-            FV8Utils::ThrowException(Isolate, "Container Constructor no support yet");
-        }
+        FV8Utils::ThrowException(Isolate, "Container Constructor no support yet");
     }
 
     // TODO - 用doxygen注释
@@ -427,4 +414,4 @@ private:
 
     FORCEINLINE static void InternalGet(const v8::FunctionCallbackInfo<v8::Value>& Info, bool PassByPointer);
 };
-}    // namespace puerts
+}    // namespace PUERTS_NAMESPACE

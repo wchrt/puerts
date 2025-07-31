@@ -1,6 +1,6 @@
 /*
  * Tencent is pleased to support the open source community by making Puerts available.
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 Tencent.  All rights reserved.
  * Puerts is licensed under the BSD 3-Clause License, except for the third-party components listed in the file 'LICENSE' which may
  * be subject to their corresponding license terms. This file is subject to the terms and conditions defined in file 'LICENSE',
  * which is part of this source code package.
@@ -21,6 +21,10 @@
 #endif
 #include "Commandlets/Commandlet.h"
 #include "TypeScriptGeneratedClass.h"
+#include "Runtime/Launch/Resources/Version.h"
+#include "Misc/Paths.h"
+#include "Misc/CommandLine.h"
+#include "Misc/ConfigCacheIni.h"
 
 DEFINE_LOG_CATEGORY_STATIC(PuertsModule, Log, All);
 
@@ -191,13 +195,14 @@ public:
         {
             if (Settings.DebugEnable)
             {
-                JsEnvGroup = MakeShared<puerts::FJsEnvGroup>(NumberOfJsEnv,
-                    std::make_shared<puerts::DefaultJSModuleLoader>(TEXT("JavaScript")), std::make_shared<puerts::FDefaultLogger>(),
+                JsEnvGroup = MakeShared<PUERTS_NAMESPACE::FJsEnvGroup>(NumberOfJsEnv,
+                    std::make_shared<PUERTS_NAMESPACE::DefaultJSModuleLoader>(Settings.RootPath),
+                    std::make_shared<PUERTS_NAMESPACE::FDefaultLogger>(),
                     DebuggerPortFromCommandLine < 0 ? Settings.DebugPort : DebuggerPortFromCommandLine);
             }
             else
             {
-                JsEnvGroup = MakeShared<puerts::FJsEnvGroup>(NumberOfJsEnv);
+                JsEnvGroup = MakeShared<PUERTS_NAMESPACE::FJsEnvGroup>(NumberOfJsEnv, Settings.RootPath);
             }
 
             if (Selector)
@@ -205,7 +210,7 @@ public:
                 JsEnvGroup->SetJsEnvSelector(Selector);
             }
 
-            //这种不支持等待
+            // 这种不支持等待
             if (Settings.WaitDebugger)
             {
                 UE_LOG(PuertsModule, Warning, TEXT("Do not support WaitDebugger in Group Mode!"));
@@ -218,13 +223,14 @@ public:
         {
             if (Settings.DebugEnable)
             {
-                JsEnv = MakeShared<puerts::FJsEnv>(std::make_shared<puerts::DefaultJSModuleLoader>(TEXT("JavaScript")),
-                    std::make_shared<puerts::FDefaultLogger>(),
+                JsEnv = MakeShared<PUERTS_NAMESPACE::FJsEnv>(
+                    std::make_shared<PUERTS_NAMESPACE::DefaultJSModuleLoader>(Settings.RootPath),
+                    std::make_shared<PUERTS_NAMESPACE::FDefaultLogger>(),
                     DebuggerPortFromCommandLine < 0 ? Settings.DebugPort : DebuggerPortFromCommandLine);
             }
             else
             {
-                JsEnv = MakeShared<puerts::FJsEnv>();
+                JsEnv = MakeShared<PUERTS_NAMESPACE::FJsEnv>(Settings.RootPath);
             }
 
             if (Settings.WaitDebugger)
@@ -248,7 +254,7 @@ public:
     }
 
 private:
-    TSharedPtr<puerts::FJsEnv> JsEnv;
+    TSharedPtr<PUERTS_NAMESPACE::FJsEnv> JsEnv;
 
     bool Enabled = false;
 
@@ -256,7 +262,7 @@ private:
 
     int32 NumberOfJsEnv = 1;
 
-    TSharedPtr<puerts::FJsEnvGroup> JsEnvGroup;
+    TSharedPtr<PUERTS_NAMESPACE::FJsEnvGroup> JsEnvGroup;
 
     int32 DebuggerPortFromCommandLine = -1;
 };
@@ -359,7 +365,12 @@ void FPuertsModule::RegisterSettings()
 #endif
     UPuertsSetting& Settings = *GetMutableDefault<UPuertsSetting>();
     const TCHAR* SectionName = TEXT("/Script/Puerts.PuertsSetting");
+#if (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 1) || ENGINE_MAJOR_VERSION > 5
+    const FString PuertsConfigIniPath =
+        FConfigCacheIni::NormalizeConfigIniPath(FPaths::SourceConfigDir().Append(TEXT("DefaultPuerts.ini")));
+#else
     const FString PuertsConfigIniPath = FPaths::SourceConfigDir().Append(TEXT("DefaultPuerts.ini"));
+#endif
     if (GConfig->DoesSectionExist(SectionName, PuertsConfigIniPath))
     {
         GConfig->GetBool(SectionName, TEXT("AutoModeEnable"), Settings.AutoModeEnable, PuertsConfigIniPath);
@@ -411,9 +422,14 @@ void FPuertsModule::StartupModule()
 #endif
 
 #if WITH_HOT_RELOAD
+#if ENGINE_MAJOR_VERSION >= 5
+    FCoreUObjectDelegates::ReloadCompleteDelegate.AddLambda(
+        [&](EReloadCompleteReason)
+#else
     IHotReloadInterface& HotReloadSupport = FModuleManager::LoadModuleChecked<IHotReloadInterface>("HotReload");
     HotReloadSupport.OnHotReload().AddLambda(
         [&](bool)
+#endif
         {
             if (Enabled)
             {
@@ -438,6 +454,10 @@ void FPuertsModule::Enable()
 {
     Enabled = true;
 
+    // 在MakeSharedJsEnv->RebindJs->load js 可能会有逻辑触发对象加载, 例如直接LoadClass
+    // AddUObjectCreateListener逻辑在rebindjs后则可能导致Inject缺漏导致 部分重写方法报错漏调用
+    GUObjectArray.AddUObjectCreateListener(static_cast<FUObjectArray::FUObjectCreateListener*>(this));
+    GUObjectArray.AddUObjectDeleteListener(static_cast<FUObjectArray::FUObjectDeleteListener*>(this));
 #if WITH_EDITOR
     if (IsRunningGame())
     {
@@ -447,9 +467,6 @@ void FPuertsModule::Enable()
 #else
     MakeSharedJsEnv();
 #endif
-
-    GUObjectArray.AddUObjectCreateListener(static_cast<FUObjectArray::FUObjectCreateListener*>(this));
-    GUObjectArray.AddUObjectDeleteListener(static_cast<FUObjectArray::FUObjectDeleteListener*>(this));
 }
 
 void FPuertsModule::Disable()

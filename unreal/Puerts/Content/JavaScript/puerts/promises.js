@@ -1,6 +1,6 @@
 /*
  * Tencent is pleased to support the open source community by making Puerts available.
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 Tencent.  All rights reserved.
  * Puerts is licensed under the BSD 3-Clause License, except for the third-party components listed in the file 'LICENSE' which may be subject to their corresponding license terms. 
  * This file is subject to the terms and conditions defined in file 'LICENSE', which is part of this source code package.
  */
@@ -15,7 +15,7 @@ var global = global || (function () { return this; }());
     const kPromiseResolveAfterResolved = 3;
     
     global.__tgjsSetPromiseRejectCallback(promiseRejectHandler)
-    delete global.__tgjsSetPromiseRejectCallback;
+    global.__tgjsSetPromiseRejectCallback = undefined;
     
     const maybeUnhandledRejection = new WeakMap();
     
@@ -25,7 +25,9 @@ var global = global || (function () { return this; }());
                 maybeUnhandledRejection.set(promise, {
                     reason,
                 }); //maybe unhandledRejection
-                Promise.resolve().then(_ => unhandledRejection(promise, reason));
+                Promise.resolve()
+                    .then(() => Promise.resolve()) // run after all microtasks
+                    .then(_ => unhandledRejection(promise, reason));
                 break;
             case kPromiseHandlerAddedAfterReject:
                 handlerAddedAfterReject(promise);
@@ -44,6 +46,7 @@ var global = global || (function () { return this; }());
         if (promiseInfo === undefined) {
             return;
         }
+        maybeUnhandledRejection.delete(promise);
         if (!puerts.emit('unhandledRejection', promiseInfo.reason, promise)) {
             unhandledRejectionWarning(reason);
         }
@@ -65,5 +68,17 @@ var global = global || (function () { return this; }());
             maybeUnhandledRejection.delete(promise);
         }
     }
+    
+    const org_setTimeout = setTimeout;
+    function setTimeout_p(handler, timeout, ...args) {
+        return org_setTimeout(() => handler(...args),  timeout);
+    }
+    global.setTimeout = setTimeout_p;
+    
+    const org_setInterval = setInterval;
+    function setInterval_p(handler, timeout, ...args) {
+        return org_setInterval(() => handler(...args),  timeout);
+    }
+    global.setInterval = setInterval_p;
     
 }(global));

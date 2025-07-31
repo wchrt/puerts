@@ -1,6 +1,6 @@
 /*
  * Tencent is pleased to support the open source community by making Puerts available.
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 Tencent.  All rights reserved.
  * Puerts is licensed under the BSD 3-Clause License, except for the third-party components listed in the file 'LICENSE' which may
  * be subject to their corresponding license terms. This file is subject to the terms and conditions defined in file 'LICENSE',
  * which is part of this source code package.
@@ -16,12 +16,16 @@
 #include "CoreUObject.h"
 #include "PropertyTranslator.h"
 
+#include "NamespaceDef.h"
+
+PRAGMA_DISABLE_UNDEFINED_IDENTIFIER_WARNINGS
 #pragma warning(push, 0)
 #include "libplatform/libplatform.h"
 #include "v8.h"
 #pragma warning(pop)
+PRAGMA_ENABLE_UNDEFINED_IDENTIFIER_WARNINGS
 
-namespace puerts
+namespace PUERTS_NAMESPACE
 {
 class FFunctionTranslator
 {
@@ -50,7 +54,7 @@ public:
     bool IsValid() const;
 
 protected:
-    FORCEINLINE void Call_ProcessParams(v8::Isolate* Isolate, v8::Local<v8::Context>& Context,
+    FORCEINLINE bool Call_ProcessParams(v8::Isolate* Isolate, v8::Local<v8::Context>& Context,
         const v8::FunctionCallbackInfo<v8::Value>& Info, void* Params, int StartPos)
     {
         if (Return)
@@ -68,9 +72,10 @@ protected:
             }
             else if (!Arguments[i]->JsToUEInContainer(Isolate, Context, Info[i - StartPos], Params, false))
             {
-                return;
+                return false;
             }
         }
+        return true;
     }
 
     FORCEINLINE void Call_ProcessReturnAndOutParams(v8::Isolate* Isolate, v8::Local<v8::Context>& Context,
@@ -103,6 +108,8 @@ protected:
     TWeakObjectPtr<UObject> BindObject;
 
     bool IsStatic;
+
+    bool SkipWorldContextInArg0;
 
     uint32 ParamsBufferSize;
 
@@ -141,4 +148,4 @@ private:
 
     bool IsUObject;
 };
-}    // namespace puerts
+}    // namespace PUERTS_NAMESPACE

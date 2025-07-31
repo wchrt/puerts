@@ -1,6 +1,6 @@
 ﻿/*
  * Tencent is pleased to support the open source community by making Puerts available.
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 Tencent.  All rights reserved.
  * Puerts is licensed under the BSD 3-Clause License, except for the third-party components listed in the file 'LICENSE' which may
  * be subject to their corresponding license terms. This file is subject to the terms and conditions defined in file 'LICENSE',
  * which is part of this source code package.
@@ -11,8 +11,9 @@
 #include "JsEnvImpl.h"
 #include "TsDynamicInvoker.h"
 #include "DynamicInvoker.h"
+#include "PuertsNamespaceDef.h"
 
-namespace puerts
+namespace PUERTS_NAMESPACE
 {
 class FGroupDynamicInvoker : public ITsDynamicInvoker, public IDynamicInvoker
 {
@@ -102,15 +103,15 @@ FJsEnvGroup::FJsEnvGroup(int Size, const FString& ScriptRoot)
 }
 
 FJsEnvGroup::FJsEnvGroup(int Size, std::shared_ptr<IJSModuleLoader> InModuleLoader, std::shared_ptr<ILogger> InLogger,
-    int InDebugStartPort, std::function<void(const FString&)> InOnSourceLoadedCallback, void* InExternalRuntime,
-    void* InExternalContext)
+    int InDebugStartPort, std::function<void(const FString&)> InOnSourceLoadedCallback, const FString InFlags,
+    void* InExternalRuntime, void* InExternalContext)
 {
     check(Size > 1);
     std::shared_ptr<IJSModuleLoader> SharedModuleLoader = std::move(InModuleLoader);
     for (int i = 0; i < Size; i++)
     {
-        JsEnvList.push_back(std::make_shared<FJsEnvImpl>(
-            SharedModuleLoader, InLogger, InDebugStartPort + i, InOnSourceLoadedCallback, InExternalRuntime, InExternalContext));
+        JsEnvList.push_back(std::make_shared<FJsEnvImpl>(SharedModuleLoader, InLogger, InDebugStartPort + i,
+            InOnSourceLoadedCallback, InFlags, InExternalRuntime, InExternalContext));
     }
     Init();
 }
@@ -181,5 +182,5 @@ void FJsEnvGroup::SetJsEnvSelector(std::function<int(UObject*, int)> InSelector)
     }
 }
 
-}    // namespace puerts
+}    // namespace PUERTS_NAMESPACE
 #endif

@@ -22,7 +22,7 @@ export default TS_Player;
 然后你在UE编辑器就能选择它
 
 
-![select_character.png](../../../doc/pic/select_character.png)
+![select_character.png](../..//pic/select_character.png)
 
 * 能被UE识别的类，支持构造函数，支持override蓝图能override的方法，支持轴映射Axis、Action事件，支持RPC
 
@@ -64,6 +64,17 @@ class TS_Player extends UE.Character {
 
 * 不支持继承蓝图，只支持继承原生类
 * 继承UserWidget或其子类并不能编辑
+* 这功能本质上是提供了一种ue调用脚本的方式，还有其它好几种方式，和其它方式相比这种方式的缺点是它模糊了脚本和宿主的界限，让程序员不自觉的写了更多的跨语言调用，进而导致性能问题（不是它本身的性能问题，就好比信用卡，不会让你每次买东西变贵，但对于自制力不高的，容易导致你买更多的东西），所以该功能慎用。
+
+### 相关命令行
+
+在UE命令行输入命令，可以查阅内部状态，手动触发特定typescript文件的编译
+
+* `puerts ls [pattern]`：查询纳入增量编译的文件，pattern是可选参数，支持正则表达式，不输入该参数标识所有文件。例子：
+    -  `puerts ls`
+    -  `puerts ls TsTestActor`
+* `puerts compile id`，其中id是`puerts ls`返回的id，例子：
+    - `puerts compile e9050088932a23f720713a9a5073986e`
 
 ### 生命周期
 
@@ -113,7 +124,7 @@ class TsTestActor extends UE.Actor {
 
 void，number，string，bigint，boolean，UE模块下的UObject派生类、枚举、UStruct，TArray、TSet、TMap、TSubclassOf（类引用）、TSoftObjectPtr（软对象引用）、TSoftClassPtr（软类引用）
 
-注意：一个函数返回类型声明为void才是无返回值，如果一个函数不声明返回类型，等同于返回any类型，而自动半丁模式并不支持any类型
+注意：一个函数返回类型声明为void才是无返回值，如果一个函数不声明返回类型，等同于返回any类型，而自动Binding模式并不支持any类型
 
 如下是几个字段和方法的示例：
 
@@ -185,6 +196,27 @@ class TsTestActor extends UE.Actor {
     //@no-blueprint
     TsOnlyField: number;
 }
+~~~
+
+### uproperty ufunction 
+~~~typescript
+import * as UE from 'ue'
+import { uproperty,uparam,ufunction } from 'ue';  
+class TsTestActor extends UE.Actor
+{
+    //注:不可以直接从UE中调用，应该import uproperty,ufuncion,uparam后调用
+    //@UE.uproperty.umeta(UE.uproperty.Category="TEST Property") //错误
+    
+    @uproperty.umeta(uproperty.ToolTip="Test Value")
+    @uproperty.uproperty(uproperty.BlueprintReadOnly,uproperty.Category="TEST Category")
+    TestValue:number;
+
+    @ufunction.ufunction(ufunction.BlueprintPure)
+    public update(AA:number , BB:number):void 
+    {   
+    }
+}
+export default TsTestActor;
 ~~~
 
 ### rpc
