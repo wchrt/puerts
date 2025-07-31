@@ -15,9 +15,6 @@ option ( USING_V8 "using v8" ON )
 option ( USING_QJS "using quickjs" ON )
 option ( USING_QJS_SUFFIX "add _qjs to namespace of simule v8 api " ON )
 
-#默认开启调试功能
-target_compile_definitions (puerts PRIVATE WITH_INSPECTOR)
-
 if("${JS_ENGINE}" MATCHES "^v8_10.6.194")
     set(CMAKE_CXX_STANDARD 17)
 else ()
@@ -455,6 +452,8 @@ if ( USING_MULT_BACKEND )
         target_compile_definitions (v8backend PRIVATE MULT_BACKENDS)
         target_compile_definitions (v8backend PRIVATE V8_BACKEND)
         target_compile_definitions (v8backend PRIVATE WITH_V8)
+        #open debug
+        target_compile_definitions (puerts PRIVATE WITH_INSPECTOR)
         set_target_properties(v8backend PROPERTIES POSITION_INDEPENDENT_CODE ON)
         target_link_libraries(puerts v8backend )
         target_compile_definitions (puerts PRIVATE MULT_BACKEND_V8)
