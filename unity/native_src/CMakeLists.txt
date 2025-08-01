@@ -452,8 +452,6 @@ if ( USING_MULT_BACKEND )
         target_compile_definitions (v8backend PRIVATE MULT_BACKENDS)
         target_compile_definitions (v8backend PRIVATE V8_BACKEND)
         target_compile_definitions (v8backend PRIVATE WITH_V8)
-        #open debug
-        target_compile_definitions (puerts PRIVATE WITH_INSPECTOR)
         set_target_properties(v8backend PROPERTIES POSITION_INDEPENDENT_CODE ON)
         target_link_libraries(puerts v8backend )
         target_compile_definitions (puerts PRIVATE MULT_BACKEND_V8)
@@ -503,6 +501,9 @@ if ( USING_MULT_BACKEND )
 endif ()
 
 # list(APPEND PUERTS_COMPILE_DEFINITIONS THREAD_SAFE)
+
+#open debug
+target_compile_definitions (puerts PRIVATE WITH_INSPECTOR)
 
 if ( WIN32 AND NOT CYGWIN )
     list(APPEND PUERTS_COMPILE_DEFINITIONS BUILDING_V8_SHARED)
