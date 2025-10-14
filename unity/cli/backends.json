@@ -78,6 +78,9 @@
             "skip": {
                 "win": {
                     "ia32": true
+                },
+                "android": {
+                    "x64": true
                 }
             },
             "link-libraries": {
