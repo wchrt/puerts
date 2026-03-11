@@ -161,19 +161,22 @@ jobs:
           echo "API_LEVEL=$(cat unity/native_src/Src/Puerts.cpp | grep -Po '(?<=API_LEVEL\s)(\d+)')" >> $GITHUB_ENV
           node -e "const pjson = JSON.parse(fs.readFileSync('$GITHUB_WORKSPACE/unity/Assets/core/upm/package.json', 'utf-8')); pjson.version = '${{ github.event.inputs.tag_name }}' ; fs.writeFileSync('$GITHUB_WORKSPACE/unity/Assets/core/upm/package.json', JSON.stringify(pjson))"
             
-      - uses: actions/download-artifact@v1
+      - uses: actions/download-artifact@v4
         with:
-          name: Unity_Plugins (v8_9.4_Release)
+          pattern: Unity_Plugins_* (v8_9.4_Release)
+          merge-multiple: true
           path: V8/upm/Plugins/
           
-      - uses: actions/download-artifact@v1
+      - uses: actions/download-artifact@v4
         with:
-          name: Unity_Plugins (quickjs_Release)
+          pattern: Unity_Plugins_* (quickjs_Release)
+          merge-multiple: true
           path: Quickjs/upm/Plugins/
 
-      - uses: actions/download-artifact@v1
+      - uses: actions/download-artifact@v4
         with:
-          name: Unity_Plugins (nodejs_16_Release)
+          pattern: Unity_Plugins_* (nodejs_16_Release)
+          merge-multiple: true
           path: Nodejs/upm/Plugins/
           
       - name: Create Release Asset

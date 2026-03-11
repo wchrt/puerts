@@ -31,10 +31,10 @@ runs:
         cd native_src
         node ../cli make --platform linux --backend ${{ inputs.backend }} --config ${{ inputs.config }}
     - name: Upload
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         path: ./unity/Assets/core/upm/Plugins/**/*
-        name: Unity_Plugins (${{ inputs.backend }}_${{ inputs.config }})
+        name: Unity_Plugins_linux (${{ inputs.backend }}_${{ inputs.config }})
     - name: Clean
       shell: bash
       run: rm -rf ./unity/Assets/core/upm/Plugins/**/*
